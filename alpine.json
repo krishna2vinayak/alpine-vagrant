@@ -1,0 +1,88 @@
+{
+  "variables": {
+    "disk_size": "10480",
+    "version": "3.16.3",
+    "iso_url": "https://dl-cdn.alpinelinux.org/alpine/v3.16/releases/x86_64/alpine-virt-3.16.3-x86_64.iso",
+    "iso_checksum": "sha256:a90150589e493d5b7e87297056b6e124d8af1b91fa2eb92bab61a839839e287b"
+  },
+  "builders": [
+    {
+      "name": "alpine-{{user `version`}}-virtualbox",
+      "vm_name": "alpine-{{user `version`}}",
+      "type": "virtualbox-iso",
+      "guest_os_type": "Linux26_64",
+      "chipset": "piix3",
+      "firmware": "efi",
+      "guest_additions_mode": "attach",
+      "headless": true,
+      "http_directory": ".",
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "2048"],
+        ["modifyvm", "{{.Name}}", "--cpus", "2"],
+        ["modifyvm", "{{.Name}}", "--vram", "16"],
+        ["modifyvm", "{{.Name}}", "--graphicscontroller", "vmsvga"],
+        ["modifyvm", "{{.Name}}", "--audio", "none"],
+        ["modifyvm", "{{.Name}}", "--boot1", "dvd"],
+        ["modifyvm", "{{.Name}}", "--boot2", "disk"],
+        ["modifyvm", "{{.Name}}", "--chipset", "piix3"],
+        ["modifyvm", "{{.Name}}", "--pae", "on"],
+        ["modifyvm", "{{.Name}}", "--apic", "on"],
+        ["modifyvm", "{{.Name}}", "--x2apic", "on"],
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
+        ["modifyvm", "{{.Name}}", "--acpi", "on"],
+        ["modifyvm", "{{.Name}}", "--firmware", "efi"],
+        ["modifyvm", "{{.Name}}", "--hpet", "on"],
+        ["modifyvm", "{{.Name}}", "--keyboard", "ps2"],
+        ["modifyvm", "{{.Name}}", "--mouse", "ps2"],
+        ["modifyvm", "{{.Name}}", "--usb-ohci", "off"],
+        ["modifyvm", "{{.Name}}", "--usb-ehci", "off"],
+        ["modifyvm", "{{.Name}}", "--usb-xhci", "off"],
+        ["modifyvm", "{{.Name}}", "--uart1", "off"],
+        ["modifyvm", "{{.Name}}", "--uart2", "off"],
+        ["modifyvm", "{{.Name}}", "--uart3", "off"],
+        ["modifyvm", "{{.Name}}", "--uart4", "off"],
+        ["modifyvm", "{{.Name}}", "--rtc-use-utc", "on"],
+        ["modifyvm", "{{.Name}}", "--nic2", "hostonlynet"],
+        ["modifyvm", "{{.Name}}", "--host-only-net2", "HostNetwork"],
+        ["storagectl", "{{.Name}}", "--name", "IDE Controller", "--remove"]
+      ],
+      "disk_size": "{{user `disk_size`}}",
+      "hard_drive_discard": true,
+      "hard_drive_interface": "sata",
+      "hard_drive_nonrotational": true,
+      "iso_interface": "sata",
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "5m",
+      "boot_wait": "25s",
+      "boot_command": [
+        "root<enter>",
+        "ifconfig eth0 up && udhcpc -i eth0<enter><wait>",
+        "ifconfig eth1 up && udhcpc -i eth1<enter><wait>",
+        "wget -qO- http://10.10.10.1:{{.HTTPPort}}/install.sh | ash<enter>"
+      ],
+      "vrdp_port_min": 5900,
+      "vrdp_port_max": 5900,
+      "shutdown_command": "sudo poweroff"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "doas sh {{.Path}}",
+      "scripts": ["provision.sh"]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "output": "{{.BuildName}}.box",
+      "vagrantfile_template": "vagrant.tpl",
+      "only": [
+        "alpine-{{user `version`}}-virtualbox"
+      ]
+    }
+  ]
+}
