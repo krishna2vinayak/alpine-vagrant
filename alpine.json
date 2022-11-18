@@ -15,7 +15,6 @@
       "firmware": "efi",
       "guest_additions_mode": "attach",
       "headless": true,
-      "http_directory": ".",
       "vboxmanage": [
         ["modifyvm", "{{.Name}}", "--memory", "2048"],
         ["modifyvm", "{{.Name}}", "--cpus", "2"],
@@ -42,8 +41,6 @@
         ["modifyvm", "{{.Name}}", "--uart3", "off"],
         ["modifyvm", "{{.Name}}", "--uart4", "off"],
         ["modifyvm", "{{.Name}}", "--rtc-use-utc", "on"],
-        ["modifyvm", "{{.Name}}", "--nic2", "hostonlynet"],
-        ["modifyvm", "{{.Name}}", "--host-only-net2", "HostNetwork"],
         ["storagectl", "{{.Name}}", "--name", "IDE Controller", "--remove"]
       ],
       "disk_size": "{{user `disk_size`}}",
@@ -59,9 +56,8 @@
       "boot_wait": "25s",
       "boot_command": [
         "root<enter>",
-        "ifconfig eth0 up && udhcpc -i eth0<enter><wait>",
-        "ifconfig eth1 up && udhcpc -i eth1<enter><wait>",
-        "wget -qO- http://10.10.10.1:{{.HTTPPort}}/install.sh | ash<enter>"
+        "ifconfig eth0 up && udhcpc -i eth0<enter><wait5s>",
+        "wget -qO- https://raw.githubusercontent.com/krishna2vinayak/alpine-vagrant/main/install.sh | ash<enter>"
       ],
       "vrdp_port_min": 5900,
       "vrdp_port_max": 5900,
